@@ -9,9 +9,11 @@
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    <ApplicationIcon>icon\radical2.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="icon\radical2.ico" />
     <PackageReference Include="LibVLCSharp.WinForms" Version="3.9.2" />
     <None Include="libvlc\**\*">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

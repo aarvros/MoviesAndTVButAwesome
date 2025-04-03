@@ -2,6 +2,7 @@
 using LibVLCSharp.Shared;
 using LibVLCSharp.WinForms;
 using System.Runtime.InteropServices;
+using System.Reflection;
 
 namespace MTVBAForm{
 public class MTVBAView : Form
@@ -29,6 +30,8 @@ public class MTVBAView : Form
 
         Text = "MTVBA";
         ClientSize = new Size(1000, 755);
+        Stream ico = LoadIcon();
+        Icon = new Icon(ico);
 
         string videoDirectory = Path.GetDirectoryName(filePath)!;
         videoFiles = Directory.GetFiles(videoDirectory, "*.mp4").OrderBy(f => Path.GetFileName(f)).ToArray();
@@ -285,6 +288,13 @@ public class MTVBAView : Form
         _mediaPlayer?.Dispose();
         _libVLC?.Dispose();
     }
+
+    private Stream LoadIcon(){
+        string ico_resource = "MTVBA.icon.radical2.ico";
+        Assembly assembly = Assembly.GetExecutingAssembly();
+        return assembly.GetManifestResourceStream(ico_resource)!;
+    }
+
 
     private static void RegisterFFmpegBinaries()
     {   
