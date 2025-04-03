@@ -58,3 +58,5 @@ nunit-*.xml
 TestVideos
 libvlc
 ffmpeg
+ffmpeg.exe
+.dll

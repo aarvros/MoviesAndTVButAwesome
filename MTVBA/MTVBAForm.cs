@@ -1,11 +1,7 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Diagnostics;
-using System.Windows.Forms;
-using System.Windows.Forms.VisualStyles;
+﻿using System.Diagnostics;
 using LibVLCSharp.Shared;
 using LibVLCSharp.WinForms;
+using System.Runtime.InteropServices;
 
 namespace MTVBAForm{
 public class MTVBAView : Form
@@ -27,13 +23,16 @@ public class MTVBAView : Form
     private int currentVideoIndex;
     private readonly int trackBarFidelity = 100; // each value is 10ms, 1000 = each step is 1000ms
 
-    public MTVBAView(){
+    public MTVBAView(string filePath){
+        RegisterFFmpegBinaries();
+        FormClosing += MainForm_FormClosing;
+
         Text = "MTVBA";
         ClientSize = new Size(1000, 755);
 
-        string videoDirectory = @"C:\Users\awclo\Desktop\GitHub\MoviesAndTVButAwesome\TestVideos";  // Set to your video folder path
-        videoFiles = Directory.GetFiles(videoDirectory, "*.mp4").OrderBy(file => file).ToArray();
-        currentVideoIndex = 0;
+        string videoDirectory = Path.GetDirectoryName(filePath)!;
+        videoFiles = Directory.GetFiles(videoDirectory, "*.mp4").OrderBy(f => Path.GetFileName(f)).ToArray();
+        currentVideoIndex = Array.IndexOf(videoFiles, filePath);
 
         TableLayoutPanel panel = new TableLayoutPanel{Dock = DockStyle.Fill,ColumnCount = 3,RowCount = 2,AutoSize = true};
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 8f));
@@ -223,12 +222,10 @@ public class MTVBAView : Form
         TimeSpan end = TimeSpan.Parse(endTime);
         TimeSpan duration = end - start;
 
-        string ffmpegPath = @"ffmpeg\ffmpeg.exe";
+        string ffmpegPath = "ffmpeg";
         string arguments = $"-i \"{inputPath}\" -ss {startTime} -t {duration} -c:v copy -c:a copy \"{outputPath}\"";
 
-        // Start the FFmpeg process
-        ProcessStartInfo processStartInfo = new ProcessStartInfo
-        {
+        ProcessStartInfo processStartInfo = new ProcessStartInfo{
             FileName = ffmpegPath,
             Arguments = arguments,
             RedirectStandardOutput = true,
@@ -238,8 +235,8 @@ public class MTVBAView : Form
         };
 
         try{
-        using (Process process = Process.Start(processStartInfo)!){}
-        MessageBox.Show($"Successfully saved trim to {outputPath}", "Success!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            using (Process process = Process.Start(processStartInfo)!){}
+            MessageBox.Show($"Successfully saved trim to {outputPath}", "Success!", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }catch (Exception ex){
             MessageBox.Show($"Error running FFmpeg: {ex.Message}", "FFmpeg Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             Console.WriteLine("Error running FFmpeg: " + ex.Message);
@@ -279,6 +276,31 @@ public class MTVBAView : Form
     private string FormatTime(long milliseconds){
         TimeSpan time = TimeSpan.FromMilliseconds(milliseconds);
         return $"{time.Hours:D2}:{time.Minutes:D2}:{time.Seconds:D2}.{time.Milliseconds:D3}";
+    }
+
+    private void MainForm_FormClosing(object? sender, FormClosingEventArgs e){   
+        trackBarTimer?.Stop();
+        trackBarTimer?.Dispose();
+        _mediaPlayer?.Stop();
+        _mediaPlayer?.Dispose();
+        _libVLC?.Dispose();
+    }
+
+    private static void RegisterFFmpegBinaries()
+    {   
+        string basePath = AppContext.BaseDirectory;
+        string ffmpegPath = Path.Combine(basePath, "ffmpeg");
+
+        if (!Directory.Exists(ffmpegPath))
+        {
+            throw new DirectoryNotFoundException("FFmpeg binaries not found.");
+        }
+
+        NativeLibrary.Load(Path.Combine(ffmpegPath, "avcodec-62.dll"));
+        NativeLibrary.Load(Path.Combine(ffmpegPath, "avformat-62.dll"));
+        NativeLibrary.Load(Path.Combine(ffmpegPath, "avutil-60.dll"));
+        NativeLibrary.Load(Path.Combine(ffmpegPath, "swresample-6.dll"));
+        NativeLibrary.Load(Path.Combine(ffmpegPath, "swscale-9.dll"));
     }
 }
 }

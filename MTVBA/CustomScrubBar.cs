@@ -1,7 +1,3 @@
-using System;
-using System.Drawing;
-using System.Windows.Forms;
-
 public class CustomScrubBar : Control
 {
     private const int PaddingOffset = 10;
@@ -20,18 +16,16 @@ public class CustomScrubBar : Control
     private bool draggingStart = false;
     private bool draggingEnd = false;
 
-    public CustomScrubBar()
-    {
-        this.DoubleBuffered = true;
-        this.Height = 30;
-        this.MouseDown += ScrubBar_MouseDown;
-        this.MouseMove += ScrubBar_MouseMove;
-        this.MouseUp += ScrubBar_MouseUp;
-        this.Resize += (s, e) => Invalidate();
+    public CustomScrubBar(){
+        DoubleBuffered = true;
+        Height = 30;
+        MouseDown += ScrubBar_MouseDown;
+        MouseMove += ScrubBar_MouseMove;
+        MouseUp += ScrubBar_MouseUp;
+        Resize += (s, e) => Invalidate();
     }
 
-    protected override void OnPaint(PaintEventArgs e)
-    {
+    protected override void OnPaint(PaintEventArgs e){
         base.OnPaint(e);
         Graphics g = e.Graphics;
         int barHeight = 10;
@@ -48,8 +42,7 @@ public class CustomScrubBar : Control
         g.FillRectangle(Brushes.Red, endX - handleSize / 2, (Height - handleSize) / 2, handleSize, handleSize);
     }
 
-    private void ScrubBar_MouseDown(object? sender, MouseEventArgs e)
-    {
+    private void ScrubBar_MouseDown(object? sender, MouseEventArgs e){
         int availableWidth = Width - (PaddingOffset * 2);
         int startX = PaddingOffset + (int)((StartTrim - Min) * availableWidth / (double)(Max - Min));
         int endX = PaddingOffset + (int)((EndTrim - Min) * availableWidth / (double)(Max - Min));
@@ -61,20 +54,16 @@ public class CustomScrubBar : Control
             draggingEnd = true;
     }
 
-    private void ScrubBar_MouseMove(object? sender, MouseEventArgs e)
-    {
+    private void ScrubBar_MouseMove(object? sender, MouseEventArgs e){
         int availableWidth = Width - (PaddingOffset * 2);
         
-        if (draggingStart)
-        {
+        if (draggingStart){
             double newStart = Min + ((e.X - PaddingOffset) * (Max - Min) / (double)availableWidth);
             StartTrim = (int)(Math.Round(newStart / PrecisionFactor) * PrecisionFactor);
             StartTrim = Math.Max(Min, Math.Min(EndTrim - 1, StartTrim));
             Invalidate();
             OnStartTrimChanged?.Invoke(FormatTime((StartTrim * TotalDurationMs) / Max));
-        }
-        else if (draggingEnd)
-        {
+        }else if (draggingEnd){
             double newEnd = Min + ((e.X - PaddingOffset) * (Max - Min) / (double)availableWidth);
             EndTrim = (int)(Math.Round(newEnd / PrecisionFactor) * PrecisionFactor);
             EndTrim = Math.Max(StartTrim + 1, Math.Min(Max, EndTrim));
@@ -83,8 +72,7 @@ public class CustomScrubBar : Control
         }
     }
 
-    private void ScrubBar_MouseUp(object? sender, MouseEventArgs e)
-    {
+    private void ScrubBar_MouseUp(object? sender, MouseEventArgs e){
         draggingStart = draggingEnd = false;
     }
 
@@ -93,8 +81,7 @@ public class CustomScrubBar : Control
         return $"{time.Hours:D2}:{time.Minutes:D2}:{time.Seconds:D2}.{time.Milliseconds:D3}";
     }
 
-    public void ResetTrim()
-    {
+    public void ResetTrim(){
         StartTrim = 0;
         EndTrim = 1000;
         Invalidate();
